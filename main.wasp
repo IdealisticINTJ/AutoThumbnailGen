@@ -1,0 +1,90 @@
+app AutoThumbnailGen {
+  wasp: {
+    version: "^0.11.4"
+  },
+  title: "AutoThumbnailGen",
+  client: {
+    rootComponent: import { Layout } from "@client/Layout.jsx",
+  },
+  db: {
+    prisma: {
+      clientPreviewFeatures: ["extendedWhereUnique"]
+    }
+  },
+  auth: {
+    userEntity: User,
+    methods: {
+      usernameAndPassword: {}
+    },
+    onAuthFailedRedirectTo: "/login",
+    onAuthSucceededRedirectTo: "/"
+  },
+}
+
+route LoginRoute { path: "/login", to: LoginPage }
+page LoginPage {
+  component: import Login from "@client/pages/auth/Login.jsx"
+}
+route SignupRoute { path: "/signup", to: SignupPage }
+page SignupPage {
+  component: import Signup from "@client/pages/auth/Signup.jsx"
+}
+
+entity User {=psl
+    id         Int         @id @default(autoincrement())
+    username   String      @unique
+    password   String
+    thumbnails Thumbnail[]
+psl=}
+
+entity Thumbnail {=psl
+    id     Int    @id @default(autoincrement())
+    title  String
+    level  String
+    image  String
+    user   User   @relation(fields: [userId], references: [id])
+    userId Int
+psl=}
+
+action createThumbnail {
+  fn: import { createThumbnail } from "@server/actions.js",
+  entities: [Thumbnail]
+}
+
+action updateThumbnail {
+  fn: import { updateThumbnail } from "@server/actions.js",
+  entities: [Thumbnail]
+}
+
+action deleteThumbnail {
+  fn: import { deleteThumbnail } from "@server/actions.js",
+  entities: [Thumbnail]
+}
+
+query getThumbnail {
+  fn: import { getThumbnail } from "@server/queries.js",
+  entities: [Thumbnail]
+}
+
+query getUserThumbnails {
+  fn: import { getUserThumbnails } from "@server/queries.js",
+  entities: [Thumbnail]
+}
+
+route DashboardRoute { path: "/", to: DashboardPage }
+page DashboardPage {
+  component: import { Dashboard } from "@client/Dashboard.jsx",
+  authRequired: true
+}
+
+route ThumbnailRoute { path: "/thumbnail/:thumbnailId", to: ThumbnailPage }
+page ThumbnailPage {
+  component: import { Thumbnail } from "@client/pages/Thumbnail.jsx",
+  authRequired: true
+}
+
+route CreateThumbnailRoute { path: "/create-thumbnail", to: CreateThumbnailPage }
+page CreateThumbnailPage {
+  component: import { CreateThumbnail } from "@client/pages/CreateThumbnail.jsx",
+  authRequired: true
+}
